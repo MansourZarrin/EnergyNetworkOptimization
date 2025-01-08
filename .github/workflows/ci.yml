@@ -19,7 +19,7 @@ jobs:
     - name: Set up Julia
       uses: julia-actions/setup-julia@v1
       with:
-        version: 1.11.2
+        version: 1.11.2  # Use your version here
 
     - name: Install dependencies
       run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
@@ -29,4 +29,3 @@ jobs:
 
     - name: Execute optimization
       run: julia main.jl
-
