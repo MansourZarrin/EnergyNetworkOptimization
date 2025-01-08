@@ -29,3 +29,9 @@ jobs:
 
     - name: Execute optimization
       run: julia main.jl
+    
+    - name: Debug Project.toml and Manifest.toml
+      run: |
+        cat Project.toml
+        echo "======"
+        cat Manifest.toml
