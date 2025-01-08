@@ -13,25 +13,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # Step 2: Set up Julia
     - name: Set up Julia
       uses: julia-actions/setup-julia@v1
       with:
-        version: 1.11.2
+        version: 1.11.2  # Replace with the Julia version you are using locally
 
+    # Step 3: Clear Julia cache (optional, to avoid potential stale environments)
+    - name: Clear Julia cache
+      run: rm -rf ~/.julia
+
+    # Step 4: Install dependencies
     - name: Install dependencies
       run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
-    - name: Run tests
-      run: julia --project=. -e 'using Test; include("test/runtests.jl")'
+    # Step 5: Debug dependencies (optional, prints installed packages in the log)
+    - name: Debug dependencies
+      run: julia --project=. -e 'using Pkg; Pkg.status()'
 
+    # Step 6: Run tests
+    - name: Run tests
+      run: julia --project=. -e 'include("test/runtests.jl")'
+
+    # Step 7: Execute the main script
     - name: Execute optimization
-      run: julia main.jl
-    
-    - name: Debug Project.toml and Manifest.toml
-      run: |
-        cat Project.toml
-        echo "======"
-        cat Manifest.toml
+      run: julia --project=. main.jl
