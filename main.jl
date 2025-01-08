@@ -39,7 +39,7 @@ model = Model(HiGHS.Optimizer)
     sum(generation[i, t] for i in plants) + discharge[t] - charge[t] == demand[t]
 )
 @constraint(model, [i in plants, t in time_periods], 
-    generation[i, t] <= (plant_capacity[i] if i == 1 else renewable_availability[t])
+    generation[i, t] <= (i == 1 ? plant_capacity[i] : renewable_availability[t])
 )
 @constraint(model, stored_energy[1] == 0)
 @constraint(model, [t in 2:length(time_periods)], 
