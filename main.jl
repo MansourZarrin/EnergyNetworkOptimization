@@ -120,11 +120,12 @@ if termination_status(model) == MOI.OPTIMAL
         for f in fossil_units
             println("  FossilUnit$f: On =", value(on[f,t]),
                     ", Gen =", round(value(gen[f,t]), digits=2), " MW")
+        end  # End of inner loop (fossil_units)
         println("  Renewables  =", round(value(ren[t]), digits=2), " MW")
         println("  Battery     = Stored:", round(value(stored[t]), digits=2),
-                " MWh, Charge:", round(value(charge[t]), digits=2),
+                ", Charge:", round(value(charge[t]), digits=2),
                 ", Discharge:", round(value(discharge[t]), digits=2))
-    end
+    end  # End of outer loop (time_periods)
 else
     println("No optimal solution found. Status: ", termination_status(model))
-end
+end  # End of if-else block
