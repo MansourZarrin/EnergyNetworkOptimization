@@ -286,6 +286,9 @@ EnergyNetworkOptimization/
    - Contains tests to validate the model's correctness.
 3. **`Project.toml` and `Manifest.toml`**:
    - Manage Julia dependencies for reproducibility.
+4. **`.github/workflows/ci.yml`**:
+   - Defines a GitHub Actions workflow for Continuous Integration (CI).
+
 
 ---
 
@@ -327,11 +330,6 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 ## **Contact**
 For questions or feedback, feel free to reach out:
 - GitHub Issues: Open an issue in this repository.
-- Email: your-email@example.com
+- Email: mansour.zarrin['@']gmail.com
 
----
 
-**Boxed Answer**:
-$$
-\boxed{\text{The revised README.md file now includes a detailed model explanation and removes references to plots.}}
-$$
