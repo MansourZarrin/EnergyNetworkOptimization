@@ -19,7 +19,7 @@ ramp_limit          = [30.0, 30.0]     # MW/hour max ramp up/down
 emission_factor     = [0.7, 0.8]       # tonCO2/MWh
 emission_cap        = 1000.0
 
-renewable_cost      = 0.0             # $/MWh for renewables
+renewable_cost      = 0.0  # $/MWh for renewables
 renewable_avail     = [rand(50:80) for _ in time_periods]  # MW
 demand              = [rand(90:120) for _ in time_periods] # MW
 
@@ -38,15 +38,12 @@ model = Model(HiGHS.Optimizer)
 # =======================
 #   Decision Variables
 # =======================
-# Fossil generation and commitment
 @variable(model, 0 <= gen[f in fossil_units, t in time_periods])
 @variable(model, on[f in fossil_units, t in time_periods], Bin)
 @variable(model, start_up[f in fossil_units, t in time_periods], Bin)
 
-# Renewables
 @variable(model, 0 <= ren[t in time_periods] <= maximum(renewable_avail))
 
-# Battery
 @variable(model, 0 <= charge[t in time_periods] <= charge_discharge_limit)
 @variable(model, 0 <= discharge[t in time_periods] <= charge_discharge_limit)
 @variable(model, 0 <= stored[t in time_periods] <= battery_capacity)
@@ -54,7 +51,6 @@ model = Model(HiGHS.Optimizer)
 # =======================
 #     Objective
 # =======================
-# Cost = fossil generation + fossil start-up + battery usage
 @objective(model, Min,
     sum(fossil_gen_cost[f] * gen[f,t] for f in fossil_units, t in time_periods)
   + sum(fossil_start_cost[f] * start_up[f,t] for f in fossil_units, t in time_periods)
@@ -87,33 +83,31 @@ model = Model(HiGHS.Optimizer)
 )
 
 # 5) Start-up tracking
-#    For t=1, if on[f,1] = 1, it means it started at 1:
+#    For t=1, if on[f,1] = 1, that means it started up at hour 1
 @constraint(model, [f in fossil_units],
     start_up[f,1] >= on[f,1]
 )
-#    For t >= 2:
+#    For t >= 2
 @constraint(model, [f in fossil_units, t in 2:length(time_periods)],
     start_up[f,t] >= on[f,t] - on[f,t-1]
 )
 
 # 6) Minimum Up/Down Times
-#    If a unit turns ON at time t, it must stay ON for the next min_up_time[f]-1 hours
-#    If it turns OFF at time t, it must remain OFF for min_down_time[f]-1 hours
 for f in fossil_units
-    # special case for t=1: if on[f,1] = 1, we stay on for next min_up_time[f]-1 periods
+    # If on[f,1] = 1, must stay ON for next min_up_time[f]-1 hours
     if min_up_time[f] > 1
-        for tau in 2 : min(1 + min_up_time[f] - 1, length(time_periods))
+        for tau in 2 : min(1 + min_up_time[f] - 1, last(time_periods))
             @constraint(model, on[f,1] <= on[f,tau])
         end
     end
-    # now for the main loop t=2..24
+
     for t in 2:length(time_periods)
-        # if a unit turns ON at t, remain ON
-        for tau in t+1 : min(t + min_up_time[f] - 1, length(time_periods))
+        # If unit turns ON at t, remain ON for min_up_time[f]
+        for tau in t+1 : min(t + min_up_time[f] - 1, last(time_periods))
             @constraint(model, on[f,t] - on[f,t-1] <= on[f,tau])
         end
-        # if a unit turns OFF at t, remain OFF
-        for tau in t+1 : min(t + min_down_time[f] - 1, length(time_periods))
+        # If unit turns OFF at t, remain OFF for min_down_time[f]
+        for tau in t+1 : min(t + min_down_time[f] - 1, last(time_periods))
             @constraint(model, on[f,t-1] - on[f,t] <= 1 - on[f,tau])
         end
     end
@@ -128,9 +122,8 @@ for f in fossil_units
 end
 
 # 8) Spinning reserve
-#    Unused fossil capacity + unused battery discharge must be at least reserve_fraction * demand[t]
 @constraint(model, [t in time_periods],
-    sum( on[f,t]*fossil_capacity[f] - gen[f,t] for f in fossil_units )
+    sum(on[f,t]*fossil_capacity[f] - gen[f,t] for f in fossil_units)
   + (charge_discharge_limit - discharge[t])
   >= reserve_fraction * demand[t]
 )
@@ -146,9 +139,10 @@ end
 optimize!(model)
 
 # =======================
-#    Display Results
+#   Display Results
 # =======================
 println("Status: ", termination_status(model))
+
 if termination_status(model) == MOI.OPTIMAL
     println("Optimal Objective Value: ", objective_value(model))
     for t in time_periods
