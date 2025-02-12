@@ -216,7 +216,7 @@ The energy network optimization model addresses key challenges in modern power s
 ### **Steps**
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/EnergyNetworkOptimization.git
+   git clone https://github.com/<your-username>/EnergyNetworkOptimization.git
    cd EnergyNetworkOptimization
    ```
 
